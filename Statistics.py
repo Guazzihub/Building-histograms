@@ -1,8 +1,8 @@
  #Setup
-import plotly.graph_objects as go
-import matplotlib.pyplot as plt
 import math
 import os
+import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 
 instru = open('instructions.txt').read()
 
