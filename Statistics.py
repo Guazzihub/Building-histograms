@@ -1,7 +1,6 @@
  #Setup
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
-import statistics as stcs
 import math
 import os
 
