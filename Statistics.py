@@ -1,130 +1,110 @@
- #Setup
 import math
 import os
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
-instru = open('instructions.txt').read()
+# File paths
+INSTRUCTIONS_FILE = 'instructions.txt'
+SAMPLE_FILE = 'sample.txt'
 
-print(instru)
-os.system('PAUSE')
-os.system('CLS')
+# Helper function to read files
+def read_file(filepath):
+    try:
+        with open(filepath, 'r') as file:
+            return file.read()
+    except FileNotFoundError:
+        print(f"Error: {filepath} not found.")
+        return None
 
-sample = open('sample.txt').readlines()
+# Display instructions
+instructions = read_file(INSTRUCTIONS_FILE)
+if instructions:
+    print(instructions)
+    input("Press Enter to continue...")
 
-default = [] #default list (table to list)
+# Load sample data
+sample_data = read_file(SAMPLE_FILE)
+if not sample_data:
+    exit()
 
- #Converting 'sample' into list
-for i in range(len(sample)):
-        linha = sample[i].strip().split(' ')
+# Convert sample data to a list of integers
+default = [int(num) for line in sample_data.splitlines() for num in line.strip().split()]
 
-        for j in range(len(linha)):
-                default.append (int(linha[j]))
+# Calculate statistics
+k = round(math.sqrt(len(default)))
+default_min = min(default)
+default_max = max(default)
+range_ = default_max - default_min
+h = math.ceil(range_ / k)
 
+# Generate class intervals
+classes = []
+current = default_min
+while current < default_max:
+    classes.append(current)
+    current += h
+classes.append(current)
 
-classes = [] #List containing every class
- #Calcs
-k = (round(math.sqrt(len(default))))
-defaultMin = min(default)
-defaultMax = max(default)
-at = (defaultMax - defaultMin)
-h = round(at/k)
-interval = (defaultMin + h)
-classes.append (defaultMin) #append the first pair of classes.
-classes.append (interval)
+# Initialize frequency lists
+frequency = []
+cumulative_frequency = []
+relative_frequency = []
+cumulative_relative_frequency = []
+midpoints = []
 
+# Calculate frequencies
+cumulative = 0
+for i in range(len(classes) - 1):
+    lower, upper = classes[i], classes[i + 1]
+    freq = sum(lower <= val < upper for val in default)
+    cumulative += freq
 
- #Generating classes
-while interval in range(max(default)):
-        classes.append(interval) #append [1st
-        interval = (interval + h)
-        classes.append(interval) #append 2nd class]
+    frequency.append(freq)
+    cumulative_frequency.append(cumulative)
+    relative_frequency.append(round(freq / len(default), 2))
+    cumulative_relative_frequency.append(round(cumulative / len(default), 2))
+    midpoints.append((lower + upper) / 2)
 
-
- #Counting frequencies
-s = 1
-r = 0
-m = 0
-
- #Frequency
-counterList = []
-counter = 0
-counterAcum = 0
-acumList = [] #Cumulative frequency
-
- #Relative frequency
-relative= 0
-relativeAcum = 0
-relativeList = []
-relativeacumList = [] # Cumulative frequency (relative)
-
- #Midpoint
-midPoint = 0
-midpointList = []
-
- #Calculating table elements in classes and appending every element to its corresponding frequency list
-while s < len(classes):
-        while m < len(default):
-                if default[m] >= classes[r] and default[m] < classes[s]:
-                        counter+=1
-                        m+=1
-                else:
-                        m+=1
-        counterAcum = counterAcum + counter
-        counterList.append(counter) #frequency list generator
-        acumList.append(counterAcum) #Cumulative list generator
-
-        relative = counter/len(default)
-        relativeAcum = relative + relativeAcum
-        relativeList.append (format (relative, '.2f')) #Relative list generator
-        relativeacumList.append (format(relativeAcum, '.2f')) #Relative cumulative list generator
-
-        midPoint = (classes[s] + classes[r])/2
-        midpointList.append (round((midPoint))) #Midpoint list generator
-
-
-
-        r+=2
-        s+=2
-        m=0
-        counter = 0
-r=0
-classSort = []
- # Generating unique classes
-while r in range(len(classes)):
-        classSort.append(classes[r])
-        r+=2
-
- #Setting up (table)
-fig = go.Figure(data=[go.Table(
-        header=dict(values=['Classes' + f' (h={h})', 'Frequency', 'Frequency cumulative', 'Relative frequency', 'Relative frequency (cumulative)', 'Midpoint'],
-        line_color='darkslategray',
-        fill_color='#D1E8D9',
-        align='center'),
-        cells=dict(values=[classSort, # 1st column
-                        counterList, # 2nd column
-                        acumList, # 3rd column
-                        relativeList, # 4th column
-			relativeacumList, # 5th column
-			midpointList, ],# 6th column
-                line_color='darkslategray',
-                fill_color='#FFFAE6',
-                align='center'))
-
+# Create table using Plotly
+fig = go.Figure(data=[
+    go.Table(
+        header=dict(
+            values=[
+                f'Classes (h={h})', 'Frequency', 'Cumulative Frequency',
+                'Relative Frequency', 'Cumulative Relative Frequency', 'Midpoint'
+            ],
+            fill_color='#D1E8D9',
+            align='center'
+        ),
+        cells=dict(
+            values=[
+                [f"{classes[i]}-{classes[i + 1]}" for i in range(len(classes) - 1)],
+                frequency,
+                cumulative_frequency,
+                relative_frequency,
+                cumulative_relative_frequency,
+                midpoints
+            ],
+            fill_color='#FFFAE6',
+            align='center'
+        )
+    )
 ])
-
- #Showing table
-fig.update_layout(width=1200, height=1000)
+fig.update_layout(width=1200, height=600)
 fig.show()
 
- #Building the graphic
-plt.title('Frequency histogram') # Graph name
-plt.xlabel('Classes') #X Label
-plt.ylabel('Frequency') #Y Label
-
-plt.bar(classSort,counterList, color='#ff5349')
+# Plot histogram
+plt.figure()
+plt.bar(
+    [f"{classes[i]}-{classes[i + 1]}" for i in range(len(classes) - 1)],
+    frequency, color='#ff5349'
+)
+plt.title('Frequency Histogram')
+plt.xlabel('Classes')
+plt.ylabel('Frequency')
+plt.xticks(rotation=45)
+plt.tight_layout()
 plt.show()
 
-#Printing default list but ordered
-print(sorted(default))
-os.system('PAUSE')
+# Print sorted data
+print("Sorted Data:", sorted(default))
