@@ -1,5 +1,5 @@
 How to use:
-	-Edit 'sample.txt' as in the example below.
+	-Edit 'sample.txt'.
 	-Press enter.
 e.g.
 
